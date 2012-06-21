@@ -1,0 +1,23 @@
+
+.poker-base-card-pattern
+{
+	display: inline-block;
+	border-radius: 4px;
+	border: solid 1px #666;
+	padding: 0.3em;
+	width: 3em;
+	height: 1em;
+	text-align: center;
+	vertical-align: middle;
+	background-color: white;
+}
+
+.poker-HEART, .poker-DIAMOND
+{
+	color: red;
+}
+
+.poker-back .poker-base-card-pattern
+{
+	background-color: #ccf;
+}

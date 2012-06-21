@@ -1,0 +1,12 @@
+
+
+
+2012.6.21	K.L.	<k.l.lambda@gmail.com>
+
+	+	Source\static\BasePattern.css: created.
+	+	Source\static\poker.js: created.
+
+	+	ChangeLog.txt: created.
+
+
+------------------------------------------------------- K.L.'s Poker ChangeLog -------------------------------------------------------
