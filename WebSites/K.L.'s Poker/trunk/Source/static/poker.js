@@ -160,6 +160,14 @@ poker.CardQueue.prototype.size = function(){
 	return this.cards.length;
 };
 
+poker.CardQueue.prototype.front = function(){
+	return this.cards[0];
+};
+
+poker.CardQueue.prototype.back = function(){
+	return this.cards[this.size() - 1];
+};
+
 poker.CardQueue.prototype.push = function(pos, card){
 	this.cards.splice(pos, 0, card);
 
@@ -168,7 +176,10 @@ poker.CardQueue.prototype.push = function(pos, card){
 
 	if(this.parentNode) {
 		card.locateNode = $("<li></li>");
-		card.locateNode.appendTo(this.parentNode);
+		if(pos >= this.size() - 1)
+			card.locateNode.appendTo(this.parentNode);
+		else
+			this.parentNode.find("li:eq(" + pos + ")").before(card.locateNode);
 	}
 
 	return card;
@@ -208,6 +219,9 @@ poker.CardQueue.prototype.popBack = function(){
 
 poker.CardQueue.prototype.updateCards = function(){
 	for(var i in this.cards) {
+		if(this.cardParentNode)
+			this.cards[i].attachNode(this.cardParentNode);
+
 		if(this.cards[i].locateNode)
 			this.cards[i].offsetTo(this.cards[i].locateNode.offset());
 	}
