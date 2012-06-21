@@ -3,6 +3,8 @@
 
 2012.6.21	K.L.	<k.l.lambda@gmail.com>
 
+	+	Source\static\poker.js: CardQueue added.
+
 	+	Source\static\BasePattern.css: created.
 	+	Source\static\poker.js: created.
 

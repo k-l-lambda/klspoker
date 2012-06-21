@@ -70,51 +70,61 @@ poker.value = function(id) {
 
 
 poker.BasePattern = {
-	cardHtml: function(card) {
-		return "<span class='poker-base-card-pattern'>" + (card.positive ? poker.identity_pattern_names[card.identity] : "?") + "</span>";
+	cardHtml: function(Card) {
+		return "<span class='poker-base-Card-pattern'>" + (Card.positive ? poker.identity_pattern_names[Card.identity] : "?") + "</span>";
 	},
 };
 
 poker.PatternScheme = poker.BasePattern;
 
 
-poker.card = function(id, positive, position) {
-	this.identity = id;
-	this.positive = positive === undefined ? true : positive;
-	this.node = $("<div class='poker-card'></div>");
+poker.Card = function(options) {
+	this.identity = options.id;
+	this.positive = options.positive === undefined ? true : options.positive;
+	this.node = $("<div class='poker-Card'></div>");
 
 	this.updateNode();
 
-	if(position)
-		this.moveTo(position.x, position.y);
+	if(options.position)
+		this.moveTo(options.position.x, options.position.y);
 };
 
-poker.card.prototype.id = function() {
+poker.Card.prototype.id = function() {
 	return this.identity;
 };
 
-poker.card.prototype.suit = function() {
+poker.Card.prototype.suit = function() {
 	return poker.suit(this.identity);
 };
 
-poker.card.prototype.value = function() {
+poker.Card.prototype.value = function() {
 	return poker.value(this.identity);
 };
 
-poker.card.prototype.updateNode = function() {
+poker.Card.prototype.attachNode = function(parent) {
+	this.node.detach();
+	this.node.appendTo(parent);
+};
+
+poker.Card.prototype.updateNode = function() {
 	this.node.html(poker.PatternScheme.cardHtml(this));
-	this.node.attr("class", "poker-card");
+	this.node.attr("class", "poker-Card");
 	if(this.positive)
 		this.node.addClass("poker-" + poker.suit_names[this.suit()]);
 	else
 		this.node.addClass("poker-back");
 };
 
-poker.card.prototype.moveTo = function(x, y) {
-	this.node.css({left: x + "px", top: y + "px"});
+poker.Card.prototype.moveTo = function(x, y) {
+	//if(this.node.offset().left != x || this.node.offset().top != y)
+		this.node.css({left: x + "px", top: y + "px"});
 };
 
-poker.card.prototype.flip = function(positive) {
+poker.Card.prototype.offsetTo = function(offset) {
+	this.moveTo(offset.left, offset.top);
+};
+
+poker.Card.prototype.flip = function(positive) {
 	if (positive == undefined)
 		positive = !this.positive;
 	this.positive = positive;
@@ -122,18 +132,104 @@ poker.card.prototype.flip = function(positive) {
 	this.updateNode();
 };
 
-
-poker.card.makeSet = function(parent, positive, posfn) {
-	var s = [];
+poker.Card.makeSet = function(options) {
+	var s = new poker.CardQueue({parentNode: options.parentNode, cardParentNode: options.cardParentNode});
 	for (var id = 0; id < poker.SET_SIZE; ++id) {
 		var position;
-		if(posfn)
-			position = posfn(id);
-		s[id] = new poker.card(id, positive, position);
-
-		if(parent)
-			s[id].node.appendTo(parent);
+		if(options.posfn)
+			position = options.posfn(id);
+		var card = s.pushBack(new poker.Card({id: id, positive: options.positive, position: position}));
 	}
 
+	if(options.shuffle)
+		s.shuffle();
+
+	s.updateCards();
+
 	return s;
+};
+
+
+poker.CardQueue = function(options){
+	this.cards = [];
+	this.parentNode = options.parentNode;
+	this.cardParentNode = options.cardParentNode;
+};
+
+poker.CardQueue.prototype.size = function(){
+	return this.cards.length;
+};
+
+poker.CardQueue.prototype.push = function(pos, card){
+	this.cards.splice(pos, 0, card);
+
+	if(this.cardParentNode)
+		card.attachNode(this.cardParentNode);
+
+	if(this.parentNode) {
+		card.locateNode = $("<li></li>");
+		card.locateNode.appendTo(this.parentNode);
+	}
+
+	return card;
+};
+
+poker.CardQueue.prototype.pushFront = function(card){
+	return this.push(0, card);
+};
+
+poker.CardQueue.prototype.pushBack = function(card){
+	return this.push(this.size(), card);
+};
+
+poker.CardQueue.prototype.pop = function(pos){
+	if(!this.size()) {
+		console.warn("pop card from empty queue.");
+		return null;
+	}
+
+	var card = this.cards.splice(pos, 1)[0];
+
+	if(card.locateNode) {
+		card.locateNode.remove();
+		card.locateNode = null;
+	}
+
+	return card;
+};
+
+poker.CardQueue.prototype.popFront = function(){
+	return this.pop(0);
+};
+
+poker.CardQueue.prototype.popBack = function(){
+	return this.pop(-1);
+};
+
+poker.CardQueue.prototype.updateCards = function(){
+	for(var i in this.cards) {
+		if(this.cards[i].locateNode)
+			this.cards[i].offsetTo(this.cards[i].locateNode.offset());
+	}
+};
+
+poker.CardQueue.prototype.shuffle = function(){
+	for(var i in this.cards)
+		this.cards[i].sortValue = Math.random();
+
+	this.cards.sort(function(a, b){return a.sortValue - b.sortValue;});
+
+	if(this.parentNode) {
+		for(var i in this.cards) {
+			if(this.cards[i].locateNode)
+				this.cards[i].locateNode.remove();
+			this.cards[i].locateNode = $("<li></li>");
+			this.cards[i].locateNode.appendTo(this.parentNode);
+
+			if(this.cardParentNode)
+				this.cards[i].attachNode(this.cardParentNode);
+		}
+	}
+
+	this.updateCards();
 };
