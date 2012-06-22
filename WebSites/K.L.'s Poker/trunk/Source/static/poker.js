@@ -70,9 +70,13 @@ poker.value = function(id) {
 
 
 poker.BasePattern = {
-	cardHtml: function(Card) {
-		return "<span class='poker-base-Card-pattern'>" + (Card.positive ? poker.identity_pattern_names[Card.identity] : "?") + "</span>";
+	loaded: true,
+	load: function(finish) {
+		finish();
 	},
+	cardHtml: function(card) {
+		return "<span class='poker-pattern poker-base-card-pattern'>" + (card.positive ? poker.identity_pattern_names[card.identity] : "?") + "</span>";
+	}
 };
 
 poker.PatternScheme = poker.BasePattern;
@@ -107,6 +111,9 @@ poker.Card.prototype.attachNode = function(parent) {
 };
 
 poker.Card.prototype.updateNode = function() {
+	if(!poker.PatternScheme.loaded)
+		poker.PatternScheme.load();
+
 	this.node.html(poker.PatternScheme.cardHtml(this));
 	this.node.attr("class", "poker-Card");
 	if(this.positive)
@@ -179,7 +186,7 @@ poker.CardQueue.prototype.push = function(pos, card){
 		if(pos >= this.size() - 1)
 			card.locateNode.appendTo(this.parentNode);
 		else
-			this.parentNode.find("li:eq(" + pos + ")").before(card.locateNode);
+			card.locateNode.insertBefore(this.parentNode.find("li:eq(" + pos + ")"));
 	}
 
 	return card;
