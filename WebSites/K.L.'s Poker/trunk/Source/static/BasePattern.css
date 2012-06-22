@@ -12,7 +12,12 @@
 	background-color: white;
 }
 
-.poker-HEART, .poker-DIAMOND
+.poker-SPADE .poker-base-card-pattern, .poker-CLUB .poker-base-card-pattern
+{
+	color: black;
+}
+
+.poker-HEART .poker-base-card-pattern, .poker-DIAMOND .poker-base-card-pattern
 {
 	color: red;
 }

@@ -115,7 +115,12 @@ poker.Card.prototype.updateNode = function() {
 		poker.PatternScheme.load();
 
 	this.node.html(poker.PatternScheme.cardHtml(this));
-	this.node.attr("class", "poker-Card");
+	this.node.removeClass("poker-SPADE");
+	this.node.removeClass("poker-HEART");
+	this.node.removeClass("poker-DIAMOND");
+	this.node.removeClass("poker-CLUB");
+	this.node.removeClass("poker-back");
+	this.node.addClass("class", "poker-Card");
 	if(this.positive)
 		this.node.addClass("poker-" + poker.suit_names[this.suit()]);
 	else
@@ -154,6 +159,10 @@ poker.Card.makeSet = function(options) {
 	s.updateCards();
 
 	return s;
+};
+
+poker.Card.prototype.animate = function() {
+	poker.animator_pool.push(this.node);
 };
 
 
@@ -254,3 +263,42 @@ poker.CardQueue.prototype.shuffle = function(){
 
 	this.updateCards();
 };
+
+
+poker.AnimatorPool = function(options) {
+	options = options || {};
+
+	this.pool = [];
+	this.limit = (options.limit === undefined) ? -1 : options.limit;
+};
+
+poker.AnimatorPool.ANIMATOR_CLASS_NAME = "poker-animator";
+
+poker.AnimatorPool.prototype.push = function(node) {
+	var index = this.pool.indexOf(node);
+	if (index >= 0) {
+		this.pool.splice(index, 1);
+	}
+
+	this.pool.splice(0, 0, node);
+	node.addClass(poker.AnimatorPool.ANIMATOR_CLASS_NAME);
+
+	this.trim();
+};
+
+poker.AnimatorPool.prototype.pop = function() {
+	var tail = this.pool[this.pool.length - 1];
+	tail.removeClass(poker.AnimatorPool.ANIMATOR_CLASS_NAME);
+	this.pool.splice(-1, 1);
+
+	return tail;
+};
+
+poker.AnimatorPool.prototype.trim = function() {
+	if (this.limit >= 0) {
+		while (this.pool.length > this.limit)
+			this.pop();
+	}
+};
+
+poker.animator_pool = new poker.AnimatorPool;
