@@ -3,6 +3,9 @@
 
 2012.6.23	K.L.	<k.l.lambda@gmail.com>
 
+	>	Source\static\svg-cards.svg: refined black joker.
+	+	Source\static\svg-cards.svg: simple back pattern added.
+
 	+	Source\templates\compares.html: created.
 
 	+	Source\main.py: created.

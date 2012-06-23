@@ -20,6 +20,9 @@ poker.SvgPattern = {
 		"black_joker", "red_joker",
 		"back"
 	],
+	options: {
+		use_simple_back: true
+	},
 	load: function(finish) {
 		$("body").prepend("<div id='poker-svg-pattern-container' style='display:none'></div>");
 		$("#poker-svg-pattern-container").load("/static/svg-cards.svg svg", function() {
@@ -30,18 +33,13 @@ poker.SvgPattern = {
 		});
 	},
 	cardHtml: function(card) {
-		var id;
-		if (card.positive) {
-			id = poker.SvgPattern.ids[card.identity];
-		}
-		else {
-			id = "back";
-		}
+		var id = card.positive ? poker.SvgPattern.ids[card.identity] : (poker.SvgPattern.options.use_simple_back ? "back-simple" : "back");
 
 		var g = $("#" + id);
 		var x = g.find("use:first").attr("x").animVal.value - 2;
 		var y = g.find("use:first").attr("y").animVal.value - 236;
 
-		return "<svg class='poker-pattern poker-svg-card-pattern' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='" + x + " " + y + " 170 246'><g>" + g.html() + "</g></svg>";
+		//return "<svg class='poker-pattern poker-svg-card-pattern' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='" + x + " " + y + " 170 246'><g>" + g.html() + "</g></svg>";
+		return "<svg class='poker-pattern poker-svg-card-pattern' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='" + x + " " + y + " 170 246'><use xlink:href='#" + id + "'></use></svg>";
 	}
 };

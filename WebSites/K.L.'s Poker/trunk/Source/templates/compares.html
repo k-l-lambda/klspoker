@@ -13,7 +13,7 @@
 				position: absolute;
 			}
 
-			.poker-card.poker-animator
+			.poker-card
 			{
 				-webkit-transition-property: left, top;
 				-webkit-transition-duration: 0.6s;
@@ -90,9 +90,9 @@
 		<script src="/static/innersvg.js" type="text/javascript"></script>
 		<script src="/static/poker.js" type="text/javascript"></script>
 		<script src="/static/SvgPattern.js" type="text/javascript"></script>
-		<script>
+		<script type="text/javascript">
 			poker.PatternScheme = poker.SvgPattern;
-			poker.animator_pool.limit = 6;
+			//poker.animator_pool.limit = 6;
 
 			var timeUnit = 400;
 			var bonus = 0;
@@ -124,8 +124,8 @@
 				q1.back().flip();
 				q2.back().flip();
 
-				q1.back().animate();
-				q2.back().animate();
+				//q1.back().animate();
+				//q2.back().animate();
 
 				c1.pushBack(q1.popBack());
 				c2.pushBack(q2.popBack());
@@ -141,21 +141,23 @@
 
 					// pull out bonus cards
 					if (bonus && (v1 != v2)) {
-						var target = v1 > v2 ? c2 : c1;
-						var winner = v1 > v2 ? q1 : q2;
-						var loser = v1 > v2 ? q2 : q1;
+						setTimeout(function() {
+							var target = v1 > v2 ? c2 : c1;
+							var winner = v1 > v2 ? q1 : q2;
+							var loser = v1 > v2 ? q2 : q1;
 
-						for (var i = 0; i < bonus * 3; ++i) {
-							if (checkResult())
-								break;
+							for (var i = 0; i < bonus * 3; ++i) {
+								if (checkResult())
+									break;
 
-							loser.back().flip();
-							loser.back().animate();
-							target.pushBack(loser.popBack());
-						}
+								loser.back().flip();
+								//loser.back().animate();
+								target.pushBack(loser.popBack());
+							}
 
-						loser.updateCards();
-						target.updateCards();
+							loser.updateCards();
+							target.updateCards();
+						}, timeUnit);
 					}
 
 					setTimeout(function() {
@@ -172,7 +174,7 @@
 
 							finish();
 						}
-					}, timeUnit * 2);
+					}, timeUnit * (2 + bonus * 2));
 				}, timeUnit * 1.2)
 			};
 
