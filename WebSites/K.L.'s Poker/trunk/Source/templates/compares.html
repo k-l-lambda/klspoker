@@ -1,0 +1,229 @@
+<html>
+	<head>
+		<title>Compares</title>
+		<link href="/static/BasePattern.css" type="text/css" rel="stylesheet" />
+		<style>
+			.clear
+			{
+				clear: both;
+			}
+
+			.poker-card
+			{
+				position: absolute;
+			}
+
+			.poker-card.poker-animator
+			{
+				-webkit-transition-property: left, top;
+				-webkit-transition-duration: 0.6s;
+			}
+
+			#wrapper
+			{
+				width: 600px;
+				margin: 0 auto;
+			}
+
+			.queue
+			{
+				float: left;
+				list-style: none;
+			}
+
+			#q2
+			{
+				margin-left: 400px;
+			}
+
+			.compact li
+			{
+				height: 4px;
+			}
+
+			.tile li
+			{
+				height: 25px;
+			}
+
+			#player-area
+			{
+				padding-bottom: 80px;
+			}
+
+			#compare-area
+			{
+				padding-top: 1em;
+			}
+
+			#compare-sign
+			{
+				text-align: center;
+				font-size: 40px;
+				height: 40px;
+			}
+
+			#result
+			{
+				text-align: center;
+				font-size: 40px;
+				height: 40px;
+			}
+
+			#c1
+			{
+				margin-left: 80px;
+			}
+
+			#c2
+			{
+				margin-left: 240px;
+			}
+
+			.poker-svg-card-pattern
+			{
+				width: 80px;
+				height: 120px;
+			}
+		</style>
+		<script src="/static/jquery.js" type="text/javascript"></script>
+		<script src="/static/innersvg.js" type="text/javascript"></script>
+		<script src="/static/poker.js" type="text/javascript"></script>
+		<script src="/static/SvgPattern.js" type="text/javascript"></script>
+		<script>
+			poker.PatternScheme = poker.SvgPattern;
+			poker.animator_pool.limit = 6;
+
+			var timeUnit = 400;
+			var bonus = 0;
+
+			$(function() {
+				poker.PatternScheme.load(function() {
+					q1 = poker.Card.makeSet({ parentNode: $("#q1"), cardParentNode: $("#cards-container"), positive: false, shuffle: true/*, posfn: function(id) { return { x: id * 10, y: id * 10 }; }*/ });
+
+					q2 = new poker.CardQueue({ parentNode: $("#q2"), cardParentNode: $("#cards-container") });
+
+					for (var i = 0; i < poker.SET_SIZE / 2; ++i)
+						q2.pushBack(q1.popFront());
+					q1.updateCards();
+					q2.updateCards();
+
+					c1 = new poker.CardQueue({ parentNode: $("#c1"), cardParentNode: $("#cards-container") });
+					c2 = new poker.CardQueue({ parentNode: $("#c2"), cardParentNode: $("#cards-container") });
+
+					var finish = function() {
+						bonus = 0;
+						if (!checkResult())
+							setTimeout(function() { compare(finish); }, timeUnit);
+					};
+					compare(finish);
+				});
+			});
+
+			var compare = function(finish) {
+				q1.back().flip();
+				q2.back().flip();
+
+				q1.back().animate();
+				q2.back().animate();
+
+				c1.pushBack(q1.popBack());
+				c2.pushBack(q2.popBack());
+
+				c1.updateCards();
+				c2.updateCards();
+
+				setTimeout(function() {
+					var v1 = c1.back().value();
+					var v2 = c2.back().value();
+
+					$("#compare-sign").text(v1 == v2 ? "=" : (v1 > v2 ? ">" : "<"));
+
+					// pull out bonus cards
+					if (bonus && (v1 != v2)) {
+						var target = v1 > v2 ? c2 : c1;
+						var winner = v1 > v2 ? q1 : q2;
+						var loser = v1 > v2 ? q2 : q1;
+
+						for (var i = 0; i < bonus * 3; ++i) {
+							if (checkResult())
+								break;
+
+							loser.back().flip();
+							loser.back().animate();
+							target.pushBack(loser.popBack());
+						}
+
+						loser.updateCards();
+						target.updateCards();
+					}
+
+					setTimeout(function() {
+						$("#compare-sign").text("");
+
+						if (v1 == v2) {
+							++bonus;
+
+							if (!checkResult())
+								compare(finish);
+						}
+						else {
+							retrieve(v1 > v2);
+
+							finish();
+						}
+					}, timeUnit * 2);
+				}, timeUnit * 1.2)
+			};
+
+			var retrieve = function(great) {
+				var target = great ? q1 : q2;
+				var greater = great ? c1 : c2;
+				var less = great ? c2 : c1;
+
+				while (greater.size()) {
+					target.pushFront(greater.popFront());
+				}
+
+				while (less.size()) {
+					target.pushFront(less.popFront());
+				}
+
+				less.updateCards();
+				greater.updateCards();
+				target.updateCards();
+
+				setTimeout(function() {
+					target.flip(false);
+				}, timeUnit);
+			};
+
+			var checkResult = function() {
+				if (q1.size() && q2.size())
+					return false;
+
+				var winner = !q1.size() ? "Right" : "Left";
+				$("#result").text(winner + " win!");
+
+				return true;
+			};
+		</script>
+	</head>
+	<body>
+		<div id="cards-container"></div>
+		<div id="wrapper">
+			<div id="player-area">
+				<ul id= "q1" class="queue compact"></ul>
+				<ul id= "q2" class="queue compact"></ul>
+				<div class="clear"></div>
+			</div>
+			<div id="compare-area">
+				<p id="compare-sign"></p>
+				<ul id= "c1" class="queue tile"></ul>
+				<ul id= "c2" class="queue tile"></ul>
+				<div class="clear"></div>
+			</div>
+			<div id="result"></div>
+		</div>
+	</body>
+</html>

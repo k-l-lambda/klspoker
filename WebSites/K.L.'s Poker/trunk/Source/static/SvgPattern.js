@@ -22,7 +22,7 @@ poker.SvgPattern = {
 	],
 	load: function(finish) {
 		$("body").prepend("<div id='poker-svg-pattern-container' style='display:none'></div>");
-		$("#poker-svg-pattern-container").load("svg-cards.svg svg", function() {
+		$("#poker-svg-pattern-container").load("/static/svg-cards.svg svg", function() {
 			poker.SvgPattern.loaded = true;
 
 			if (finish)

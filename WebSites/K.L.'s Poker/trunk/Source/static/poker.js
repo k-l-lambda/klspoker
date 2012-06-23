@@ -85,7 +85,7 @@ poker.PatternScheme = poker.BasePattern;
 poker.Card = function(options) {
 	this.identity = options.id;
 	this.positive = options.positive === undefined ? true : options.positive;
-	this.node = $("<div class='poker-Card'></div>");
+	this.node = $("<div class='poker-card'></div>");
 
 	this.updateNode();
 
@@ -139,9 +139,12 @@ poker.Card.prototype.offsetTo = function(offset) {
 poker.Card.prototype.flip = function(positive) {
 	if (positive == undefined)
 		positive = !this.positive;
-	this.positive = positive;
 
-	this.updateNode();
+	if (this.positive != positive) {
+		this.positive = positive;
+
+		this.updateNode();
+	}
 };
 
 poker.Card.makeSet = function(options) {
@@ -184,18 +187,26 @@ poker.CardQueue.prototype.back = function(){
 	return this.cards[this.size() - 1];
 };
 
-poker.CardQueue.prototype.push = function(pos, card){
+poker.CardQueue.prototype.push = function(pos, card) {
 	this.cards.splice(pos, 0, card);
 
-	if(this.cardParentNode)
+	if (this.cardParentNode)
 		card.attachNode(this.cardParentNode);
 
-	if(this.parentNode) {
+	if (this.parentNode) {
 		card.locateNode = $("<li></li>");
-		if(pos >= this.size() - 1)
+		if (pos >= this.size() - 1) {
 			card.locateNode.appendTo(this.parentNode);
-		else
+
+			card.node.detach();
+			card.node.appendTo(this.cardParentNode);
+		}
+		else {
 			card.locateNode.insertBefore(this.parentNode.find("li:eq(" + pos + ")"));
+
+			card.node.detach();
+			card.node.insertBefore(this.cards[pos + 1].node);
+		}
 	}
 
 	return card;
@@ -235,9 +246,6 @@ poker.CardQueue.prototype.popBack = function(){
 
 poker.CardQueue.prototype.updateCards = function(){
 	for(var i in this.cards) {
-		if(this.cardParentNode)
-			this.cards[i].attachNode(this.cardParentNode);
-
 		if(this.cards[i].locateNode)
 			this.cards[i].offsetTo(this.cards[i].locateNode.offset());
 	}
@@ -262,6 +270,11 @@ poker.CardQueue.prototype.shuffle = function(){
 	}
 
 	this.updateCards();
+};
+
+poker.CardQueue.prototype.flip = function(positive) {
+	for (var i in this.cards)
+		this.cards[i].flip(positive);
 };
 
 
