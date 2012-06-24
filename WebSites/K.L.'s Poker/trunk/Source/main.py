@@ -12,9 +12,16 @@ class SampleComapresHandler(webapp.RequestHandler):
         self.response.out.write(template.render(path, {}))
 
 
+class SampleChessHandler(webapp.RequestHandler):
+    def get(self):
+        path = os.path.join(os.path.dirname(__file__), 'templates/chess.html')
+        self.response.out.write(template.render(path, {}))
+
+
 def main():
     application = webapp.WSGIApplication([
         ('/samples/compares',                       SampleComapresHandler),
+        ('/samples/chess',                          SampleChessHandler),
         ], debug=True)
     util.run_wsgi_app(application)
 

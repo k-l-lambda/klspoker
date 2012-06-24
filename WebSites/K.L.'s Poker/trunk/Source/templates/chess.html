@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<title>Poker Chess</title>
+		<style type="text/css">
+			#wrapper
+			{
+				width: 800px;
+				margin: 0 auto;
+			}
+
+			#chess-board
+			{
+				position: relative;
+				border-spacing: 0;
+				border: solid 1px #444;
+				border-radius: 4px;
+				z-index: 200;
+			}
+
+			.chess-cell
+			{
+				width: 82px;
+				height: 116px;
+				border: solid 1px transparent;
+				cursor: pointer;
+				opacity: 0.3;
+			}
+
+			.chess-cell:hover
+			{
+				background-color: white;
+			}
+
+			.poker-card
+			{
+				position: absolute;
+			}
+
+			.poker-card
+			{
+				-webkit-transition-property: left, top;
+				-webkit-transition-duration: 0.6s;
+			}
+
+			.poker-pattern
+			{
+				width: 80px;
+				height: 120px;
+			}
+		</style>
+		<script src="/static/jquery.js" type="text/javascript"></script>
+		<script src="/static/innersvg.js" type="text/javascript"></script>
+		<script src="/static/poker.js" type="text/javascript"></script>
+		<script src="/static/SvgPattern.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			//poker.SvgPattern.options.use_simple_back = false;
+			poker.PatternScheme = poker.SvgPattern;
+
+			var chess = {};
+
+			chess.Game = function(options) {
+				this.BoardWidth = 9;
+				this.BoardHeight = 6;
+
+				this.makeBoard();
+
+				this.cards = poker.Card.makeSet({ cardParentNode: $("#cards-container"), positive: false }).cards;
+				this.cardGrid = [];
+				this.resetCards();
+			};
+
+			chess.Game.prototype.makeBoard = function() {
+				var self = this;
+
+				$("#chess-board").html("");
+
+				for (var y = 0; y < this.BoardHeight; ++y) {
+					var tr = $("<tr></tr>");
+					tr.appendTo("#chess-board");
+					for (var x = 0; x < this.BoardWidth; ++x) {
+						var td = $("<td><div class='chess-cell'></div></td>");
+						td.appendTo(tr);
+						var cell = td.find(".chess-cell");
+						cell.data({ x: x, y: y });
+						cell.click(function() {
+							self.onCellClick($(this).data("x"), $(this).data("y"));
+						});
+					}
+				}
+			};
+
+			chess.Game.prototype.resetCards = function() {
+				var self = this;
+
+				var cards = poker.Card.disturb(this.cards.slice());
+				for (var i in cards) {
+					var card = cards[i];
+					card.coordinate = { x: i % this.BoardWidth, y: Math.floor(i / this.BoardWidth) };
+					card.updatePosition();
+
+					/*card.setOnClick(function(c) {
+					self.onCardClick(c);
+					});*/
+
+					this.cardGrid[card.coordinate.y] = this.cardGrid[card.coordinate.y] || [];
+					this.cardGrid[card.coordinate.y][card.coordinate.x] = card;
+				}
+			};
+
+			chess.Game.prototype.onCellClick = function(x, y) {
+				if (this.cardGrid[y][x])
+					this.onCardClick(this.cardGrid[y][x]);
+			};
+
+			chess.Game.prototype.onCardClick = function(card) {
+				card.flip();
+			};
+
+
+			poker.Card.prototype.updatePosition = function() {
+				this.alignTo($("#chess-board tr:eq(" + this.coordinate.y + ") td:eq(" + this.coordinate.x + ")"), {x: 3, y: 1});
+			};
+		</script>
+		<script type="text/javascript">
+			var game = null;
+
+			$(function() {
+				poker.PatternScheme.load(function() {
+					game = new chess.Game;
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="cards-container"></div>
+		<div id="wrapper">
+			<table id="chess-board">
+			</table>
+		</div>
+	</body>
+</html>

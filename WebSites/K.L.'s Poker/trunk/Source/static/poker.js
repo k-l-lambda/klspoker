@@ -120,7 +120,7 @@ poker.Card.prototype.updateNode = function() {
 	this.node.removeClass("poker-DIAMOND");
 	this.node.removeClass("poker-CLUB");
 	this.node.removeClass("poker-back");
-	this.node.addClass("class", "poker-Card");
+	this.node.addClass("poker-Card");
 	if(this.positive)
 		this.node.addClass("poker-" + poker.suit_names[this.suit()]);
 	else
@@ -132,8 +132,11 @@ poker.Card.prototype.moveTo = function(x, y) {
 		this.node.css({left: x + "px", top: y + "px"});
 };
 
-poker.Card.prototype.offsetTo = function(offset) {
-	this.moveTo(offset.left, offset.top);
+poker.Card.prototype.alignTo = function(node, relative) {
+	relative = relative || {x: 0, y: 0};
+
+	var offset = node.offset();
+	this.moveTo(offset.left + relative.x, offset.top + relative.y);
 };
 
 poker.Card.prototype.flip = function(positive) {
@@ -144,6 +147,19 @@ poker.Card.prototype.flip = function(positive) {
 		this.positive = positive;
 
 		this.updateNode();
+	}
+};
+
+poker.Card.prototype.animate = function() {
+	poker.animator_pool.push(this.node);
+};
+
+poker.Card.prototype.setOnClick = function(e) {
+	var self = this;
+
+	if (this.node) {
+		this.node.unbind("click");
+		this.node.click(function() { e(self); });
 	}
 };
 
@@ -164,8 +180,13 @@ poker.Card.makeSet = function(options) {
 	return s;
 };
 
-poker.Card.prototype.animate = function() {
-	poker.animator_pool.push(this.node);
+poker.Card.disturb = function(cards) {
+	for (var i in cards)
+		cards[i].sortValue = Math.random();
+
+	cards.sort(function(a, b) { return a.sortValue - b.sortValue; });
+
+	return cards;
 };
 
 
@@ -247,24 +268,21 @@ poker.CardQueue.prototype.popBack = function(){
 poker.CardQueue.prototype.updateCards = function(){
 	for(var i in this.cards) {
 		if(this.cards[i].locateNode)
-			this.cards[i].offsetTo(this.cards[i].locateNode.offset());
+			this.cards[i].alignTo(this.cards[i].locateNode);
 	}
 };
 
-poker.CardQueue.prototype.shuffle = function(){
-	for(var i in this.cards)
-		this.cards[i].sortValue = Math.random();
+poker.CardQueue.prototype.shuffle = function() {
+	poker.Card.disturb(this.cards);
 
-	this.cards.sort(function(a, b){return a.sortValue - b.sortValue;});
-
-	if(this.parentNode) {
-		for(var i in this.cards) {
-			if(this.cards[i].locateNode)
+	if (this.parentNode) {
+		for (var i in this.cards) {
+			if (this.cards[i].locateNode)
 				this.cards[i].locateNode.remove();
 			this.cards[i].locateNode = $("<li></li>");
 			this.cards[i].locateNode.appendTo(this.parentNode);
 
-			if(this.cardParentNode)
+			if (this.cardParentNode)
 				this.cards[i].attachNode(this.cardParentNode);
 		}
 	}
