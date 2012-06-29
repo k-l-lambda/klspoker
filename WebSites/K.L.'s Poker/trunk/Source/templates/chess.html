@@ -2,6 +2,11 @@
 	<head>
 		<title>Poker Chess</title>
 		<style type="text/css">
+			body
+			{
+				overflow-y: hidden;
+			}
+
 			#wrapper
 			{
 				width: 800px;
@@ -17,6 +22,12 @@
 				z-index: 200;
 			}
 
+			#chess-board td
+			{
+				border-right: solid 1px #eee;
+				border-bottom: solid 1px #eee;
+			}
+
 			.chess-cell
 			{
 				width: 82px;
@@ -24,11 +35,22 @@
 				border: solid 1px transparent;
 				cursor: pointer;
 				opacity: 0.3;
+				border: solid 2px transparent;
 			}
 
-			.chess-cell:hover
+			.chess-cell.chess-cell-DISABLED_BACK
 			{
-				background-color: white;
+				background-color: #000;
+			}
+
+			.chess-cell.chess-cell-ENABLED_BACK:hover
+			{
+				background-color: #eef;
+			}
+
+			.chess-cell.chess-cell-FACE:hover
+			{
+				border-color: #0f0;
 			}
 
 			.poker-card
@@ -58,26 +80,33 @@
 
 			var chess = {};
 
+			chess.CellStateNames = ["DISABLED_BACK", "ENABLED_BACK", "FACE", "EMPTY"];
+			chess.CellState = poker.namesToEnum(chess.CellStateNames);
+
+			chess.BoardStatus = poker.namesToEnum(["LOCKED", "CHOSSING_CARD", "CHOSSING_TARGET"]);
+
 			chess.Game = function(options) {
-				this.BoardWidth = 9;
-				this.BoardHeight = 6;
+				options = options || {};
 
-				this.makeBoard();
-
-				this.cards = poker.Card.makeSet({ cardParentNode: $("#cards-container"), positive: false }).cards;
-				this.cardGrid = [];
-				this.resetCards();
+				this.board = new chess.Board(options);
 			};
 
-			chess.Game.prototype.makeBoard = function() {
+			chess.Board = function(options) {
+				options = options || {};
+
+				this.status = chess.BoardStatus.CHOSSING_CARD;
+				this.width = 9;
+				this.height = 6;
+				this.boardNode = options.boardNode || $("#chess-board");
+
 				var self = this;
 
-				$("#chess-board").html("");
+				this.boardNode.html("");
 
-				for (var y = 0; y < this.BoardHeight; ++y) {
+				for (var y = 0; y < this.height; ++y) {
 					var tr = $("<tr></tr>");
 					tr.appendTo("#chess-board");
-					for (var x = 0; x < this.BoardWidth; ++x) {
+					for (var x = 0; x < this.width; ++x) {
 						var td = $("<td><div class='chess-cell'></div></td>");
 						td.appendTo(tr);
 						var cell = td.find(".chess-cell");
@@ -87,38 +116,64 @@
 						});
 					}
 				}
+
+				this.cards = poker.Card.makeSet({ cardParentNode: $("#cards-container"), positive: false }).cards;
+				this.cardGrid = [];
+				this.resetCards();
+
+				this.onTurn = 0;
 			};
 
-			chess.Game.prototype.resetCards = function() {
+			chess.Board.prototype.resetCards = function() {
 				var self = this;
 
 				var cards = poker.Card.disturb(this.cards.slice());
 				for (var i in cards) {
 					var card = cards[i];
-					card.coordinate = { x: i % this.BoardWidth, y: Math.floor(i / this.BoardWidth) };
-					card.updatePosition();
-
-					/*card.setOnClick(function(c) {
-					self.onCardClick(c);
-					});*/
+					card.coordinate = { x: i % this.width, y: Math.floor(i / this.width) };
+					this.updateCardPosition(card);
 
 					this.cardGrid[card.coordinate.y] = this.cardGrid[card.coordinate.y] || [];
 					this.cardGrid[card.coordinate.y][card.coordinate.x] = card;
+
+					this.setCellState(card.coordinate, chess.CellState.ENABLED_BACK);
 				}
 			};
 
-			chess.Game.prototype.onCellClick = function(x, y) {
+			chess.Board.prototype.onCellClick = function(x, y) {
 				if (this.cardGrid[y][x])
 					this.onCardClick(this.cardGrid[y][x]);
 			};
 
-			chess.Game.prototype.onCardClick = function(card) {
-				card.flip();
+			chess.Board.prototype.onCardClick = function(card) {
+				if (this.status == chess.BoardStatus.CHOSSING_CARD) {
+					if (this.getCellState(card.coordinate) == chess.CellState.ENABLED_BACK) {
+						card.flip();
+
+						this.setCellState(card.coordinate, chess.CellState.FACE);
+					}
+				}
 			};
 
+			chess.Board.prototype.cell = function(x, y) {
+				return this.boardNode.find("tr:eq(" + y + ") td:eq(" + x + ") .chess-cell");
+			};
 
-			poker.Card.prototype.updatePosition = function() {
-				this.alignTo($("#chess-board tr:eq(" + this.coordinate.y + ") td:eq(" + this.coordinate.x + ")"), {x: 3, y: 1});
+			chess.Board.prototype.updateCardPosition = function(card) {
+				card.alignTo(this.cell(card.coordinate.x, card.coordinate.y), { x: 3, y: 1 });
+			};
+
+			chess.Board.prototype.setCellState = function(coordinate, state) {
+				var cell = this.cell(coordinate.x, coordinate.y);
+				for (var s in chess.CellStateNames)
+					cell.removeClass("chess-cell-" + chess.CellStateNames[s]);
+				cell.addClass("chess-cell-" + chess.CellStateNames[state]);
+
+				cell.data("state", state);
+			};
+
+			chess.Board.prototype.getCellState = function(coordinate) {
+				return this.cell(coordinate.x, coordinate.y).data("state");
 			};
 		</script>
 		<script type="text/javascript">

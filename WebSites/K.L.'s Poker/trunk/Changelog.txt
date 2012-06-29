@@ -1,6 +1,11 @@
 
 
 
+2012.6.29	K.L.	<k.l.lambda@gmail.com>
+
+	+	Source\templates\chess.html: board state added.
+
+
 2012.6.24	K.L.	<k.l.lambda@gmail.com>
 
 	+	Source\templates\chess.html: page created.

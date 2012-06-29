@@ -39,7 +39,6 @@ poker.SvgPattern = {
 		var x = g.find("use:first").attr("x").animVal.value - 2;
 		var y = g.find("use:first").attr("y").animVal.value - 236;
 
-		//return "<svg class='poker-pattern poker-svg-card-pattern' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='" + x + " " + y + " 170 246'><g>" + g.html() + "</g></svg>";
 		return "<svg class='poker-pattern poker-svg-card-pattern' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='" + x + " " + y + " 170 246'><use xlink:href='#" + id + "'></use></svg>";
 	}
 };
